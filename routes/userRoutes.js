@@ -1,15 +1,18 @@
 const express = require("express");
+const multer = require("multer");
 
 const {
-  signUpController, // Corrected casing
+  signUpController,
   signInController,
 } = require("../controller/userController");
 
 const router = express.Router();
 
-router.post("/signup", signUpController);
+// Multer Storage Setup (Store in memory for Cloudinary)
+const storage = multer.memoryStorage();
+const upload = multer({ storage });
 
-// Login Route
+router.post("/signup", upload.single("profileImage"), signUpController);
 router.post("/login", signInController);
 
 module.exports = router;
