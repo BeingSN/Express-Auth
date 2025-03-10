@@ -47,7 +47,7 @@ Description:
 
 Authenticates the user with email and password.
 
-Returns an authentication token upon successful login.
+Returns an authentication token and email generation upon successful login.
 
 Notes
 
