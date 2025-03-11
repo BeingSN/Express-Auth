@@ -49,6 +49,18 @@ Request Payload:
   "password": "testing@123"
 }
 
+Endpoint:
+
+POST http://localhost:5000/api/auth/reset-password
+
+Request Payload:
+
+{
+  "email": "testing123@gmail.com",
+  "password": "testing@123",
+  "newPassword" : "newtesting@123"
+}
+
 ## Description:
 
 Authenticates the user with email and password.

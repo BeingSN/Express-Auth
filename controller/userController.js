@@ -21,18 +21,31 @@ cloudinary.config({
 const storage = multer.memoryStorage();
 const upload = multer({ storage });
 
-// User Registration Controller
+// **User Registration Controller**
 exports.signUpController = async (req, res) => {
   try {
-    const { firstName, lastName, email, password, role } = req.body;
+    const {
+      firstName,
+      lastName,
+      username,
+      email,
+      password,
+      mobile,
+      address,
+      role,
+    } = req.body;
     const file = req.file;
 
-    const existingUser = await User.findOne({ email });
+    // Check if email, username, or mobile already exists
+    const existingUser = await User.findOne({
+      $or: [{ email }, { username }, { mobile }],
+    });
     if (existingUser)
       return res.status(400).json({ message: "User already exists" });
 
     const hashedPassword = await bcrypt.hash(password, 10);
 
+    // Ensure only one admin exists
     if (role === "admin") {
       const adminExists = await User.findOne({ role: "admin" });
       if (adminExists) {
@@ -55,8 +68,11 @@ exports.signUpController = async (req, res) => {
           const newUser = new User({
             firstName,
             lastName,
+            username,
             email,
             password: hashedPassword,
+            mobile,
+            address,
             role,
             profileImage,
           });
@@ -73,8 +89,11 @@ exports.signUpController = async (req, res) => {
       const newUser = new User({
         firstName,
         lastName,
+        username,
         email,
         password: hashedPassword,
+        mobile,
+        address,
         role,
       });
 
@@ -86,17 +105,20 @@ exports.signUpController = async (req, res) => {
   }
 };
 
-// User Login Controller
+// **User Login Controller**
 exports.signInController = async (req, res) => {
   try {
-    const { email, password } = req.body;
-    if (!email || !password) {
+    const { emailOrUsername, password } = req.body;
+    if (!emailOrUsername || !password) {
       return res
         .status(400)
-        .json({ message: "Email and password are required" });
+        .json({ message: "Email/Username and password are required" });
     }
 
-    const user = await User.findOne({ email });
+    // Find user by email or username
+    const user = await User.findOne({
+      $or: [{ email: emailOrUsername }, { username: emailOrUsername }],
+    });
 
     if (!user) return res.status(400).json({ message: "Invalid credentials" });
 
@@ -118,13 +140,47 @@ exports.signInController = async (req, res) => {
         id: user._id,
         firstName: user.firstName,
         lastName: user.lastName,
+        username: user.username,
         email: user.email,
+        mobile: user.mobile,
+        address: user.address,
         role: user.role,
         profileImage: user.profileImage, // Return Cloudinary image URL
       },
     });
   } catch (error) {
     console.error("Login Error:", error);
+    res.status(500).json({ message: "Internal Server Error" });
+  }
+};
+
+exports.resetPasswordController = async (req, res) => {
+  try {
+    const { email, password, newPassword } = req.body;
+
+    if (!email || !password || !newPassword) {
+      return res.status(400).json({ message: "All fields are required" });
+    }
+
+    const user = await User.findOne({ email });
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    // Compare provided password with stored password
+    const isMatch = await bcrypt.compare(password, user.password);
+    if (!isMatch) {
+      return res.status(400).json({ message: "Incorrect password" });
+    }
+
+    // Hash and update the new password
+    const hashedPassword = await bcrypt.hash(newPassword, 10);
+    user.password = hashedPassword;
+    await user.save();
+
+    res.status(200).json({ message: "Password updated successfully" });
+  } catch (error) {
+    console.error("Reset Password Error:", error);
     res.status(500).json({ message: "Internal Server Error" });
   }
 };

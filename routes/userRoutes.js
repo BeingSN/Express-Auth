@@ -4,6 +4,7 @@ const multer = require("multer");
 const {
   signUpController,
   signInController,
+  resetPasswordController,
 } = require("../controller/userController");
 
 const router = express.Router();
@@ -14,5 +15,6 @@ const upload = multer({ storage });
 
 router.post("/signup", upload.single("profileImage"), signUpController);
 router.post("/login", signInController);
+router.post("/reset-password", resetPasswordController);
 
 module.exports = router;
