@@ -108,17 +108,16 @@ exports.signUpController = async (req, res) => {
 // **User Login Controller**
 exports.signInController = async (req, res) => {
   try {
-    const { emailOrUsername, password } = req.body;
-    if (!emailOrUsername || !password) {
+    const { email, password } = req.body;
+
+    if (!email || !password) {
       return res
         .status(400)
-        .json({ message: "Email/Username and password are required" });
+        .json({ message: "Email and password are required" });
     }
 
-    // Find user by email or username
-    const user = await User.findOne({
-      $or: [{ email: emailOrUsername }, { username: emailOrUsername }],
-    });
+    // Find user by email
+    const user = await User.findOne({ email });
 
     if (!user) return res.status(400).json({ message: "Invalid credentials" });
 
@@ -140,12 +139,11 @@ exports.signInController = async (req, res) => {
         id: user._id,
         firstName: user.firstName,
         lastName: user.lastName,
-        username: user.username,
         email: user.email,
         mobile: user.mobile,
         address: user.address,
         role: user.role,
-        profileImage: user.profileImage, // Return Cloudinary image URL
+        profileImage: user.profileImage,
       },
     });
   } catch (error) {
