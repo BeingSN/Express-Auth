@@ -50,7 +50,7 @@ Request Payload:
 }
 
 Endpoint:
-
+reset password
 POST http://localhost:5000/api/auth/reset-password
 
 Request Payload:
